@@ -10,16 +10,12 @@ var ErrTaskNotFound = errors.New("task not found")
 type Tasks []Task
 
 func (ts Tasks) nextID() int {
-	if len(ts) == 0 {
-		return 1
-	}
-
-	maxID := ts[0].ID
+	maxID := 0
 	for _, t := range ts {
 		maxID = max(maxID, t.ID)
 	}
 
-	return maxID
+	return maxID + 1
 }
 
 func (ts Tasks) indexOf(id int) (int, error) {
@@ -43,7 +39,29 @@ func (ts *Tasks) delete(id int) error {
 	return nil
 }
 
-func (ts *Tasks) add(description string) {
-	t := createTask(description)
+func (ts *Tasks) add(description string) int {
+	id := ts.nextID()
+	t := newTask(id, description)
 	*ts = append(*ts, t)
+	return id
+}
+
+func (ts *Tasks) updateDescription(id int, description string) error {
+	i, err := ts.indexOf(id)
+	if err != nil {
+		return err
+	}
+
+	(*ts)[i].updateDescription(description)
+	return nil
+}
+
+func (ts *Tasks) updateStatus(id int, status Status) error {
+	i, err := ts.indexOf(id)
+	if err != nil {
+		return err
+	}
+
+	(*ts)[i].updateStatus(status)
+	return nil
 }

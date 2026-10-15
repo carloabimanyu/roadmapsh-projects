@@ -35,9 +35,9 @@ func (t *Task) updateStatus(status Status) {
 func newTask(id int, description string) Task {
 	now := time.Now()
 	return Task{
-		ID:          int(now.UnixMilli()),
+		ID:          id,
 		Description: description,
-		Status:      "todo",
+		Status:      StatusTodo,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
