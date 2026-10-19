@@ -13,8 +13,8 @@ type FileStore struct {
 	path string
 }
 
-func NewFileStore(path string) *FileStore {
-	return &FileStore{path: path}
+func NewFileStore(path string) FileStore {
+	return FileStore{path: path}
 }
 
 func (s FileStore) Load() (Tasks, error) {
@@ -53,7 +53,7 @@ func (s FileStore) Save(ts Tasks) error {
 	defer os.Remove(writer.Name())
 
 	encoder := json.NewEncoder(writer)
-	encoder.SetIndent("", " ")
+	encoder.SetIndent("", "  ")
 	if err = encoder.Encode(ts); err != nil {
 		writer.Close()
 		return fmt.Errorf("encode %s: %w", s.path, err)
