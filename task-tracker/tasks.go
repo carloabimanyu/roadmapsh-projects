@@ -39,11 +39,14 @@ func (ts *Tasks) delete(id int) error {
 	return nil
 }
 
-func (ts *Tasks) add(description string) int {
+func (ts *Tasks) add(description string) (int, error) {
 	id := ts.nextID()
-	t := newTask(id, description)
+	t, err := newTask(id, description)
+	if err != nil {
+		return 0, err
+	}
 	*ts = append(*ts, t)
-	return id
+	return id, nil
 }
 
 func (ts *Tasks) updateDescription(id int, description string) error {
@@ -52,8 +55,7 @@ func (ts *Tasks) updateDescription(id int, description string) error {
 		return err
 	}
 
-	(*ts)[i].updateDescription(description)
-	return nil
+	return (*ts)[i].updateDescription(description)
 }
 
 func (ts *Tasks) updateStatus(id int, status Status) error {

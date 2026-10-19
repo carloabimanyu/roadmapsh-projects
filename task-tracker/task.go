@@ -1,6 +1,10 @@
 package main
 
-import "time"
+import (
+	"errors"
+	"strings"
+	"time"
+)
 
 type Status string
 
@@ -18,13 +22,29 @@ type Task struct {
 	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
+var ErrEmptyDescription = errors.New("description cannot be empty")
+
+func normalizeDescription(description string) (string, error) {
+	normalizedDescription := strings.TrimSpace(description)
+	if normalizedDescription == "" {
+		return "", ErrEmptyDescription
+	}
+	return normalizedDescription, nil
+}
+
 func (t *Task) touch() {
 	t.UpdatedAt = time.Now()
 }
 
-func (t *Task) updateDescription(description string) {
-	t.Description = description
+func (t *Task) updateDescription(description string) error {
+	normalizedDescription, err := normalizeDescription(description)
+	if err != nil {
+		return err
+	}
+
+	t.Description = normalizedDescription
 	t.touch()
+	return nil
 }
 
 func (t *Task) updateStatus(status Status) {
@@ -32,13 +52,18 @@ func (t *Task) updateStatus(status Status) {
 	t.touch()
 }
 
-func newTask(id int, description string) Task {
+func newTask(id int, description string) (Task, error) {
+	normalizedDescription, err := normalizeDescription(description)
+	if err != nil {
+		return Task{}, err
+	}
+
 	now := time.Now()
 	return Task{
 		ID:          id,
-		Description: description,
+		Description: normalizedDescription,
 		Status:      StatusTodo,
 		CreatedAt:   now,
 		UpdatedAt:   now,
-	}
+	}, nil
 }
