@@ -69,3 +69,16 @@ func (s FileStore) Save(ts Tasks) error {
 
 	return nil
 }
+
+func (s FileStore) Update(fn func(ts *Tasks) error) error {
+	ts, err := s.Load()
+	if err != nil {
+		return err
+	}
+
+	if err = fn(&ts); err != nil {
+		return err
+	}
+
+	return s.Save(ts)
+}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 )
 
@@ -24,7 +25,7 @@ func (ts Tasks) indexOf(id int) (int, error) {
 	})
 
 	if i == -1 {
-		return i, ErrTaskNotFound
+		return i, fmt.Errorf("%w for id = %d", ErrTaskNotFound, id)
 	}
 	return i, nil
 }

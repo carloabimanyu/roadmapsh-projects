@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -97,5 +98,67 @@ func TestSaveLoad_RoundTrip(t *testing.T) {
 		if !ts[i].UpdatedAt.Equal(tsLoaded[i].UpdatedAt) {
 			t.Errorf("tsLoaded[%d].UpdatedAt = %v, want %v", i, tsLoaded[i].UpdatedAt, ts[i].UpdatedAt)
 		}
+	}
+}
+
+func TestUpdate_SavesChanges(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tasks.json")
+	s := NewFileStore(path)
+
+	err := s.Update(func(ts *Tasks) error {
+		_, err := ts.add("Learn Go")
+		return err
+	})
+	if err != nil {
+		t.Fatalf("Update() error = %v, want nil", err)
+	}
+
+	ts, err := s.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v, want nil", err)
+	}
+
+	if len(ts) != 1 {
+		t.Errorf("len(ts) = %d, want 1", len(ts))
+	}
+}
+
+func TestUpdate_ErrorDoesNotSave(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "tasks.json")
+	s := NewFileStore(path)
+	ts, err := s.Load()
+	if err != nil {
+		t.Fatalf("setup: Load() error = %v, want nil", err)
+	}
+	_, err = ts.add("Buy groceries")
+	if err != nil {
+		t.Fatalf("setup: Tasks.add() error = %v, want nil", err)
+	}
+	err = s.Save(ts)
+	if err != nil {
+		t.Fatalf("setup: Save() error = %v, want nil", err)
+	}
+
+	errBoom := errors.New("boom")
+	err = s.Update(func(ts *Tasks) error {
+		_, err := ts.add("Learn Go")
+		if err != nil {
+			t.Fatalf("Tasks.add() error = %v, want nil", err)
+		}
+		return errBoom
+	})
+	if !errors.Is(err, errBoom) {
+		t.Errorf("Update() error = %v, want %v", err, errBoom)
+	}
+
+	ts, err = s.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v, want nil", err)
+	}
+
+	if len(ts) != 1 {
+		t.Errorf("len(ts) = %d, want 1", len(ts))
 	}
 }

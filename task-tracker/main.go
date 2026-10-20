@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 const tasksFile = "tasks.json"
@@ -21,20 +22,17 @@ func run(args []string) error {
 			return errors.New("usage: task-tracker add <description>")
 		}
 
-		ts, err := s.Load()
+		var id int
+
+		err := s.Update(func(ts *Tasks) error {
+			var err error
+			id, err = ts.add(args[1])
+			return err
+		})
 		if err != nil {
 			return err
 		}
 
-		id, err := ts.add(args[1])
-		if err != nil {
-			return err
-		}
-
-		err = s.Save(ts)
-		if err != nil {
-			return err
-		}
 		fmt.Printf("Task added successfully (ID: %d)\n", id)
 
 	case "list":
@@ -75,6 +73,25 @@ func run(args []string) error {
 		for i := range ts {
 			fmt.Printf("%3d %-12s%s\n", ts[i].ID, ts[i].Status, ts[i].Description)
 		}
+
+	case "delete":
+		if len(args) != 2 {
+			return errors.New("usage: task-tracker delete <id>")
+		}
+
+		id, err := strconv.Atoi(args[1])
+		if err != nil {
+			return fmt.Errorf("cannot convert %q to number, id must be a number", args[1])
+		}
+
+		err = s.Update(func(ts *Tasks) error {
+			return ts.delete(id)
+		})
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Task deleted successfully (ID: %d)\n", id)
 
 	default:
 		return fmt.Errorf("unknown command %q", args[0])
