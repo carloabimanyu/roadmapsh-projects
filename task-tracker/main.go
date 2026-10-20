@@ -10,6 +10,11 @@ import (
 
 const tasksFile = "tasks.json"
 
+var markStatus = map[string]Status{
+	"mark-in-progress": StatusInProgress,
+	"mark-done":        StatusDone,
+}
+
 func parseID(s string) (int, error) {
 	id, err := strconv.Atoi(strings.TrimSpace(s))
 	if err != nil {
@@ -108,6 +113,30 @@ func run(args []string) error {
 		}
 
 		fmt.Printf("Task updated successfully (ID: %d)\n", id)
+
+	case "mark-in-progress", "mark-done":
+		if len(args) != 2 {
+			return fmt.Errorf("usage: task-tracker %s <id>", args[0])
+		}
+
+		id, err := parseID(args[1])
+		if err != nil {
+			return err
+		}
+
+		status, ok := markStatus[args[0]]
+		if !ok {
+			return fmt.Errorf("internal error: no status mapped for command %q", args[0])
+		}
+
+		err = s.Update(func(ts *Tasks) error {
+			return ts.updateStatus(id, status)
+		})
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Task marked as %s (ID: %d)\n", status, id)
 
 	case "delete":
 		if len(args) != 2 {
