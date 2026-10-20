@@ -5,9 +5,23 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 const tasksFile = "tasks.json"
+
+func parseID(s string) (int, error) {
+	id, err := strconv.Atoi(strings.TrimSpace(s))
+	if err != nil {
+		return 0, fmt.Errorf("invalid id %q: must be a number", s)
+	}
+
+	if id <= 0 {
+		return 0, fmt.Errorf("invalid id %q: cannot be zero or negative", s)
+	}
+
+	return id, nil
+}
 
 func run(args []string) error {
 	if len(args) == 0 {
@@ -74,14 +88,35 @@ func run(args []string) error {
 			fmt.Printf("%3d %-12s%s\n", ts[i].ID, ts[i].Status, ts[i].Description)
 		}
 
+	case "update":
+		if len(args) != 3 {
+			return errors.New("usage: task-tracker update <id> <description>")
+		}
+
+		id, err := parseID(args[1])
+		if err != nil {
+			return err
+		}
+
+		description := args[2]
+
+		err = s.Update(func(ts *Tasks) error {
+			return ts.updateDescription(id, description)
+		})
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Task updated successfully (ID: %d)\n", id)
+
 	case "delete":
 		if len(args) != 2 {
 			return errors.New("usage: task-tracker delete <id>")
 		}
 
-		id, err := strconv.Atoi(args[1])
+		id, err := parseID(args[1])
 		if err != nil {
-			return fmt.Errorf("cannot convert %q to number, id must be a number", args[1])
+			return err
 		}
 
 		err = s.Update(func(ts *Tasks) error {
