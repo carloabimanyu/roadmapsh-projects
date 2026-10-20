@@ -67,3 +67,14 @@ func (ts *Tasks) updateStatus(id int, status Status) error {
 	(*ts)[i].updateStatus(status)
 	return nil
 }
+
+func (ts Tasks) filterByStatus(status Status) Tasks {
+	result := Tasks{}
+	for _, t := range ts {
+		if t.Status == status {
+			result = append(result, t)
+		}
+	}
+
+	return result
+}

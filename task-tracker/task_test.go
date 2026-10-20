@@ -32,3 +32,32 @@ func TestNormalizeDescription(t *testing.T) {
 		})
 	}
 }
+
+func TestParseStatus(t *testing.T) {
+	tests := []struct {
+		name    string
+		status  string
+		want    Status
+		wantErr error
+	}{
+		{name: "valid todo", status: "todo", want: StatusTodo, wantErr: nil},
+		{name: "valid in-progress", status: "in-progress", want: StatusInProgress, wantErr: nil},
+		{name: "valid done", status: "done", want: StatusDone, wantErr: nil},
+		{name: "invalid", status: "completed", want: "", wantErr: ErrInvalidStatus},
+		{name: "valid uppercase", status: "TODO", want: StatusTodo, wantErr: nil},
+		{name: "valid with space", status: "  done ", want: StatusDone, wantErr: nil},
+		{name: "invalid empty string", status: "", want: "", wantErr: ErrInvalidStatus},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			status, err := parseStatus(tt.status)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("parseStatus() error = %v, want %v", err, tt.wantErr)
+			}
+			if status != tt.want {
+				t.Errorf("parseStatus() got = %q, want %q", status, tt.want)
+			}
+		})
+	}
+}

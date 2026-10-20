@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -30,6 +31,18 @@ func normalizeDescription(description string) (string, error) {
 		return "", ErrEmptyDescription
 	}
 	return normalizedDescription, nil
+}
+
+var ErrInvalidStatus = errors.New("invalid status")
+
+func parseStatus(s string) (Status, error) {
+	normalizedStatus := strings.ToLower(strings.TrimSpace(s))
+	switch Status(normalizedStatus) {
+	case StatusTodo, StatusInProgress, StatusDone:
+		return Status(normalizedStatus), nil
+	default:
+		return "", fmt.Errorf("%w %q", ErrInvalidStatus, s)
+	}
 }
 
 func (t *Task) touch() {
